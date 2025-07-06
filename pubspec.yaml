@@ -13,7 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-
+  flutter_pdfview: ^1.4.1+1
+  syncfusion_flutter_pdf: ^25.2.7
   cupertino_icons: ^1.0.8
   file_picker: ^10.2.0
   http: ^0.13.6
