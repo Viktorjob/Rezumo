@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rezumo/download_files/ui/check.dart';
@@ -7,8 +8,19 @@ import 'download_files/bloc/file_picker_bloc.dart';
 import 'download_files/ui/file_picker_screen.dart';
 
 
+
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+  debugPrint = (String? message, {int? wrapWidth}) {
+    if (message?.contains('Adreno') == false &&
+        message?.contains('Gralloc') == false) {
+      debugPrintSynchronously(message, wrapWidth: wrapWidth);
+    }
+  };
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

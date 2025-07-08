@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rezumo/download_files/ui/List_edit_cv.dart';
 import 'package:rezumo/download_files/ui/check.dart';
 
 import 'package:rezumo/download_files/ui/file_picker_screen.dart';
@@ -28,7 +29,8 @@ class _BottomNavigationBarExampleState extends State<BottomNavigationBarExample>
 
   final List<Widget> _widgetOptions = <Widget>[
     const FilePickerScreen(),
-    const Check(cvText: '',),
+    const editlist(),
+    //const Check(cvText: '',),
   ];
 
   void _onItemTapped(int index) {

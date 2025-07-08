@@ -25,7 +25,7 @@ class FilePickerScreen extends StatelessWidget {
                 onPressed: () {
                   context.read<FilePickerBloc>().add(PickFileEvent());
                 },
-                child: const Text('Выбрать PDF'),
+                child: const Text('Select PDF'),
               );
             } else if (state is FilePickerLoading) {
               return const CircularProgressIndicator();
@@ -38,10 +38,10 @@ class FilePickerScreen extends StatelessWidget {
                     width: 300,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.black,   // цвет рамки
-                        width: 5,             // толщина рамки
+                        color: Colors.black,
+                        width: 5,
                       ),
-                      borderRadius: BorderRadius.circular(8),  // скругление углов (по желанию)
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: PDFView(
                       filePath: state.filePath,
@@ -60,25 +60,16 @@ class FilePickerScreen extends StatelessWidget {
                     onPressed: () {
                       context.read<FilePickerBloc>().add(PickFileEvent());
                     },
-                    child: const Text('Выбрать другой файл'),
+                    child: const Text('Select another file'),
                   ),
                   ElevatedButton(
                     onPressed: () async {
-                      final filePath = state.filePath; // Путь к PDF
-
-                      // 1. Прочитай файл
+                      final filePath = state.filePath;
                       final bytes = File(filePath).readAsBytesSync();
-
-                      // 2. Загрузи PDF документ
                       final document = PdfDocument(inputBytes: bytes);
-
-                      // 3. Извлеки текст
                       final extractedText = PdfTextExtractor(document).extractText();
-
-                      // 4. Освободи ресурсы
                       document.dispose();
 
-                      // 5. Перейди к экрану Check, передав текст
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -86,7 +77,7 @@ class FilePickerScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    child: const Text('Проверка'),
+                    child: const Text('Examination'),
                   ),
 
                 ],
@@ -95,14 +86,14 @@ class FilePickerScreen extends StatelessWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Ошибка: ${state.message}',
+                  Text('Error: ${state.message}',
                       style: const TextStyle(color: Colors.red)),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       context.read<FilePickerBloc>().add(PickFileEvent());
                     },
-                    child: const Text('Попробовать снова'),
+                    child: const Text('Try again'),
                   ),
                 ],
               );
