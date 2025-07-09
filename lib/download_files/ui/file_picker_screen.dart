@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:rezumo/download_files/ui/check.dart';
+import 'package:rezumo/analysis_and%20_recommendation/check.dart';
+
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../bloc/file_picker_bloc.dart';
