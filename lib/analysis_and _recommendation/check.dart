@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:rezumo/list_cv/List_edit_cv.dart';
 
 class Check extends StatefulWidget {
   final String cvText;
@@ -68,7 +71,7 @@ Make sure your response is structured, easy to follow, and uses bullet points or
         Uri.parse('https://api.deepseek.com/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer Your api_key',
+          'Authorization': 'Bearer Your api-key',
         },
         body: jsonEncode({
           'model': 'deepseek-chat',
@@ -119,7 +122,27 @@ Make sure your response is structured, easy to follow, and uses bullet points or
             ),
         ],
       ),
-      body: _buildContent(),
+      body: Stack(
+        children: [
+          _buildContent(),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0, top: 15),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => editlist()),
+                  );
+                },
+                child: const Text('Edit my pdf'),
+              ),
+            ),
+          ),
+        ],
+      ),
+
     );
   }
 
@@ -172,13 +195,6 @@ Make sure your response is structured, easy to follow, and uses bullet points or
           if (analysisResult != null) ...[
             _buildFormattedAnalysis(analysisResult!),
             const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.copy, size: 20),
-                label: const Text('Copy Full Analysis'),
-                onPressed: _copyAnalysisToClipboard,
-              ),
-            ),
           ] else
             const Text('Failed to get analysis'),
         ],
