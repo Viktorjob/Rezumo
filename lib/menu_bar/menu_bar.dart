@@ -30,7 +30,7 @@ class _BottomNavigationBarExampleState extends State<BottomNavigationBarExample>
   final List<Widget> _widgetOptions = <Widget>[
     const FilePickerScreen(),
     const editlist(),
-    //const Check(cvText: '',),
+
   ];
 
   void _onItemTapped(int index) {
