@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
-import 'package:rezumo/download_files/ui/check.dart';
+import 'package:rezumo/analysis_and%20_recommendation/check.dart';
+
 import '../bloc/file_picker_bloc.dart';
 
 class FilePickerScreen extends StatefulWidget {

@@ -1,33 +1,51 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:rezumo/list_cv/List_edit_cv.dart';
+
 
 class Check extends StatefulWidget {
   final String cvText;
-
-  const Check({Key? key, required this.cvText}) : super(key: key);
+  final String level;
+  const Check({
+    Key? key,
+    required this.cvText,
+    required this.level,
+  }) : super(key: key);
 
   @override
   _CheckState createState() => _CheckState();
 }
 
+String cleanMarkdown(String input) {
+  return input
+      .replaceAll(RegExp(r'\\\d'), '')
+      .replaceAll(RegExp(r'\*\*(.*?)\*\*'), r'\1')
+      .replaceAll(RegExp(r'#+\s*'), '')
+      .replaceAll(RegExp(r'^\s*-\s*', multiLine: true), '')
+      .replaceAll(RegExp(r'`{3}.*?`{3}', dotAll: true), '')
+      .replaceAll(RegExp(r'[•\-–●▪◉❌✅✔️➤]'), '')
+      .replaceAll(RegExp(r'\n{2,}'), '\n\n')
+      .trim();
+}
+
 class _CheckState extends State<Check> {
-  String? analysisResult;
+  String? updatedHtml;
   bool isLoading = true;
   String? errorMessage;
-  //final GlobalKey _contentKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
-    _analyzeWithDeepSeek();
+    _improveCv();
   }
 
-  Future<void> _analyzeWithDeepSeek() async {
+  Future<void> _improveCv() async {
     try {
       setState(() {
         isLoading = true;
@@ -35,279 +53,231 @@ class _CheckState extends State<Check> {
       });
 
       final prompt = """
-You are a professional HR analyst. Analyze the resume and provide detailed, actionable recommendations.
+You are a top HR professional who excels at improving resumes. Your task is to **rewrite and improve this HTML resume** for a ${widget.level.toLowerCase()}-level position.
 
-Resume Analysis:
+**Important:** Your response must be the **complete, improved HTML code of the resume**. Do not include any additional text, analysis, or markdown outside of the HTML structure. Ensure the HTML is well-formed and ready for direct use.
+
+Original Resume HTML:
 ${widget.cvText}
 
-Analyze the following:
-1. Structure (Does it include all key sections?)
-2. Work Experience (Specific achievements and impact)
-3. Skills (Relevance to the target position)
-4. Clarity & Readability (Grammar, conciseness, formatting)
+Review the original HTML and apply improvements related to:
+1.  **Structure**: Ensure all key sections are present and logically ordered (e.g., Contact Information, Professional Summary, Work Experience, Education, Skills, Projects, Awards/Certifications). Add missing sections if necessary.
+2.  **Work Experience**: For each role, enhance descriptions with specific achievements, quantifiable results, and impact. Use action verbs.
+3.  **Skills**: Ensure relevance to the target ${widget.level.toLowerCase()}-level position. Group skills logically.
+4.  **Clarity & Readability**: Improve grammar, conciseness, and formatting. Ensure consistency in styling.
 
-Structure your response as:
-- Strengths
-- Weaknesses
-- Improvement Recommendations
-
-For each Improvement Recommendation, do the following:
-- Quote the **exact part** of the resume that needs to be changed (use quotation marks).
-- Provide a **clear suggestion** for how to rewrite or improve that part.
-- If a section is **missing**, clearly indicate what is missing and provide an example of what should be added.
-
-Format your response like this:
-Improvement Recommendation:
-1. ❌ "Current quoted text from the resume"
-   ✅ Suggested replacement or improvement
-
-2. ❌ [Missing Section: e.g., 'Professional Summary']
-   ✅ Suggested content to add: "Experienced software engineer with 5+ years..."
-
-Make sure your response is structured, easy to follow, and uses bullet points or numbered lists for clarity.
+Provide only the improved HTML.
 """;
 
       final response = await http.post(
         Uri.parse('https://api.deepseek.com/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer Your api-key',
+          'Authorization': 'Bearer sk-adeb63c7fce543729d6359e9e081d557', // Replace with your actual DeepSeek API key
         },
         body: jsonEncode({
           'model': 'deepseek-chat',
-          'messages': [
-            {
-              'role': 'user',
-              'content': prompt,
-            }
-          ],
+          'messages': [{'role': 'user', 'content': prompt}],
           'temperature': 0.7,
-          'max_tokens': 2000,
+          'max_tokens': 8192,
         }),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final rawResponse = data['choices'][0]['message']['content'];
+
+        final startIndex = rawResponse.toLowerCase().indexOf('<html');
+        final endIndex = rawResponse.toLowerCase().lastIndexOf('</html>');
+
+        String? cleanedHtml;
+        if (startIndex != -1 && endIndex != -1 && endIndex >= startIndex) {
+          cleanedHtml = rawResponse.substring(startIndex, endIndex + '</html>'.length);
+        } else {
+          final htmlMatch = RegExp(r'(<html[\s\S]*<\/html>)|(<body[\s\S]*<\/body>)|(<div[\s\S]*<\/div>)', caseSensitive: false).firstMatch(rawResponse);
+          cleanedHtml = htmlMatch?.group(0) ?? rawResponse.trim();
+        }
+
         setState(() {
-          analysisResult = data['choices'][0]['message']['content'];
+          updatedHtml = cleanedHtml;
         });
       } else {
-        throw Exception('API Error: ${response.statusCode}\n${response.body}');
+        throw Exception('API Error: ${response.body}');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Analysis error: ${e.toString()}';
-      });
-      debugPrint('Full error details: $e');
+      setState(() => errorMessage = 'Error: $e');
+      debugPrint('Error improving CV: $e');
     } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  Future<void> _convertHtmlToPdf(String htmlContent) async {
+    try {
+      final uri = Uri.parse('https://uk-v2.convertapi.com/convert/html/to/pdf');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer LKHfjqi7eZw9cFUTsRzqYp7ytxPTjKM7' // Replace with your actual ConvertAPI key
+        ..fields['StoreFile'] = 'true'
+        ..files.add(http.MultipartFile.fromString('File', htmlContent, filename: 'updated_resume.html'));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final jsonResponse = await response.stream.bytesToString();
+        final data = jsonDecode(jsonResponse);
+        final fileUrl = data['Files'][0]['Url'];
+        debugPrint("PDF created, URL: $fileUrl");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("PDF successfully created. You can download it from: $fileUrl"),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      } else {
+        final errorBody = await response.stream.bytesToString();
+        throw Exception('PDF conversion error (${response.statusCode}): $errorBody');
+      }
+    } catch (e) {
+      debugPrint("Error creating PDF: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("PDF Error: $e")),
+      );
+    }
+  }
+
+  void _copyHtmlToClipboard() {
+    if (updatedHtml != null && updatedHtml!.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: updatedHtml!));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('HTML-код скопирован в буфер обмена!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Нет HTML-кода для копирования.')),
+      );
+    }
+  }
+  Future<String?> _generateAndSavePdf(String htmlContent) async {
+    try {
+      // Генерация PDF - используем текущий код конвертации (через API)
+      final uri = Uri.parse('https://uk-v2.convertapi.com/convert/html/to/pdf');
+      final request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer LKHfjqi7eZw9cFUTsRzqYp7ytxPTjKM7'
+        ..fields['StoreFile'] = 'true'
+        ..files.add(http.MultipartFile.fromString('File', htmlContent, filename: 'updated_resume.html'));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final jsonResponse = await response.stream.bytesToString();
+        final data = jsonDecode(jsonResponse);
+        final fileUrl = data['Files'][0]['Url'];
+
+        // Скачиваем PDF по URL и сохраняем локально
+        final pdfBytes = await http.readBytes(Uri.parse(fileUrl));
+
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/updated_resume.pdf';
+        final file = File(filePath);
+        await file.writeAsBytes(pdfBytes);
+
+        return filePath;
+      } else {
+        final errorBody = await response.stream.bytesToString();
+        throw Exception('PDF conversion error (${response.statusCode}): $errorBody');
+      }
+    } catch (e) {
+      debugPrint("Error generating PDF: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("PDF generation error: $e")),
+      );
+      return null;
+    }
+  }
+
+  Widget _buildHtmlContent(String htmlString) {
+    if (htmlString.isEmpty) {
+      return const Text('HTML content is empty or not received.', style: TextStyle(color: Colors.grey));
+    }
+    return Html(
+      data: htmlString,
+      style: {
+        "body": Style(
+          fontSize: FontSize(16.0),
+          lineHeight: LineHeight(1.5),
+          color: Colors.black87,
+        ),
+        "h1": Style(fontSize: FontSize(24.0), fontWeight: FontWeight.bold),
+        "h2": Style(fontSize: FontSize(20.0), fontWeight: FontWeight.bold),
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Resume Analysis'),
+        title: const Text('Improve Resume'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _analyzeWithDeepSeek,
+            tooltip: 'Обновить резюме',
+            onPressed: () {
+              _improveCv(); // Вызов метода для обновления резюме
+            },
           ),
-          if (analysisResult != null)
-            IconButton(
-              icon: const Icon(Icons.copy),
-              onPressed: _copyAnalysisToClipboard,
-              tooltip: 'Copy analysis',
-            ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          _buildContent(),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, top: 15),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => editlist()),
-                  );
-                },
-                child: const Text('Edit my pdf'),
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.copy),
+            tooltip: 'Копировать HTML',
+            onPressed: () {
+              _copyHtmlToClipboard(); // Вызов метода для копирования HTML
+            },
           ),
         ],
       ),
-
-    );
-  }
-
-  Future<void> _copyAnalysisToClipboard() async {
-    if (analysisResult == null) return;
-
-
-    String cleanedText = analysisResult!
-        .replaceAllMapped(RegExp(r'[^\x00-\x7F]+'), (match) => '')
-        .replaceAll('*', '')
-        .replaceAll('#', '')
-        .replaceAll('❌', '[X] ')
-        .replaceAll('✅', '[✓] ')
-        .replaceAll('“', '"')
-        .replaceAll('”', '"')
-        .replaceAll('�', '');
-
-    await Clipboard.setData(ClipboardData(text: cleanedText));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Analysis copied to clipboard')),
-    );
-  }
-
-  Widget _buildContent() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (errorMessage != null) {
-      return Center(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+          ? Center(child: Text(errorMessage!))
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _analyzeWithDeepSeek,
-              child: const Text('Try again'),
+            /*const Text(
+              'Improved Resume (HTML):',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 12),*/
+            _buildHtmlContent(updatedHtml ?? 'Failed to get improved resume.'),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () async {
+                if (updatedHtml != null && updatedHtml!.isNotEmpty) {
+                  final pdfPath = await _generateAndSavePdf(updatedHtml!);
+                  if (pdfPath != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditList(
+                          pdfFiles: [PdfFile(name: "MyResume.pdf", path: pdfPath)],
+                        ),
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("No HTML content to convert to PDF.")),
+                  );
+                }
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit my PDF'),
+            ),
+
           ],
         ),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (analysisResult != null) ...[
-            _buildFormattedAnalysis(analysisResult!),
-            const SizedBox(height: 20),
-          ] else
-            const Text('Failed to get analysis'),
-        ],
       ),
-    );
-  }
-
-  Widget _buildFormattedAnalysis(String text) {
-
-    String cleanedText = text.replaceAllMapped(RegExp(r'[^\x00-\x7F]+'), (match) => '');
-
-
-    cleanedText = cleanedText
-        .replaceAll('*', '')
-        .replaceAll('#', '')
-        .replaceAll('❌', '')
-        .replaceAll('✅', '')
-        .replaceAll('“', '"')
-        .replaceAll('”', '"')
-        .replaceAll('�', '');
-
-    final sections = cleanedText.split('\n');
-    final List<Widget> widgets = [];
-
-    for (var line in sections) {
-      if (line.trim().isEmpty) continue;
-
-
-      if (line.startsWith('Resume Analysis') ||
-          line.startsWith('Suggested Improvement')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 8),
-            child: Text(
-              line.trim(),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
-              ),
-            ),
-          ),
-        );
-        continue;
-      }
-
-
-      if (line.contains('"')) {
-        widgets.add(
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              line.trim(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        );
-        continue;
-      }
-
-
-      if (line.trim().startsWith('-')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.only(top: 8, right: 8),
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    line.replaceFirst('-', '').trim(),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-        continue;
-      }
-
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            line.trim(),
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
     );
   }
 }

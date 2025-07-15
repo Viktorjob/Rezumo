@@ -12,6 +12,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  permission_handler: ^12.0.1
+  url_launcher: ^6.3.2
   flutter_markdown_latex: ^0.3.4
   flutter_html: ^3.0.0
   pdfx: ^2.5.0
@@ -24,7 +26,7 @@ dependencies:
   path_provider: ^2.1.5
   open_file: ^3.5.10
   flutter_bloc: ^9.1.1
-
+  shared_preferences: ^2.5.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
