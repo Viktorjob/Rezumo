@@ -1,65 +1,99 @@
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 
-class PdfFile {
-  final String name;
-  final String path;
-  PdfFile({required this.name, required this.path});
+import 'package:rezumo/list_cv/helper_for_save.dart';
+import 'package:rezumo/list_cv/models/pdf_file.dart';
+
+
+
+
+class EditList extends StatefulWidget {
+  const EditList({Key? key, required List<PdfFile> pdfFiles}) : super(key: key);
+
+  @override
+  State<EditList> createState() => _EditListState();
 }
 
-class EditList extends StatelessWidget {
-  final List<PdfFile> pdfFiles;
+class _EditListState extends State<EditList> {
+  List<PdfFile> _pdfFiles = [];
 
-  const EditList({Key? key, required this.pdfFiles}) : super(key: key);
+  @override
+  void initState() {
+    super.initState();
+    _loadFiles();
+  }
+  void _editFileName(int index) async {
+    final TextEditingController controller = TextEditingController(text: _pdfFiles[index].name);
 
-  Future<void> _downloadFile(BuildContext context, PdfFile pdfFile) async {
-    try {
-      final downloadsDir = await getApplicationDocumentsDirectory();
-      final savePath = '${downloadsDir.path}/${pdfFile.name}';
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename File'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Enter new name'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save')),
+        ],
+      ),
+    );
 
-      final sourceFile = File(pdfFile.path);
-      final savedFile = await sourceFile.copy(savePath);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('File saved: ${savedFile.path}')),
-      );
+    if (newName != null && newName.isNotEmpty) {
+      setState(() {
+        _pdfFiles[index] = PdfFile(name: newName, path: _pdfFiles[index].path);
+      });
 
 
-      final result = await OpenFile.open(savedFile.path);
-
-      if (result.type != ResultType.done) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open the file.: ${result.message}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving file: $e')),
-      );
+      await PdfStorage.saveFiles(_pdfFiles);
     }
+  }
+
+  void _loadFiles() async {
+    final loaded = await PdfStorage.loadFiles();
+    setState(() {
+      _pdfFiles = loaded.cast<PdfFile>();
+    });
   }
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit PDF List'),
-      ),
-      body: ListView.builder(
-        itemCount: pdfFiles.length,
+      appBar: AppBar(title: const Text('List of resumes')),
+      body: _pdfFiles.isEmpty
+          ? const Center(child: Text('List is empty'))
+          : ListView.builder(
+        itemCount: _pdfFiles.length,
         itemBuilder: (context, index) {
-          final pdfFile = pdfFiles[index];
-          return ListTile(
-            title: Text(pdfFile.name),
-            trailing: IconButton(
-              icon: const Icon(Icons.download),
-              onPressed: () => _downloadFile(context, pdfFile),
-              tooltip: 'Скачать PDF',
+          final file = _pdfFiles[index];
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: 2),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: ListTile(
+              title: Text(file.name),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editFileName(index),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.open_in_new),
+                    onPressed: () => OpenFile.open(file.path),
+                  ),
+                ],
+              ),
+            ),
+
           );
+
         },
       ),
     );

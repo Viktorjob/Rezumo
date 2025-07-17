@@ -8,7 +8,7 @@ class PdfUtils {
   static Future<String?> generateAndSavePdf(String htmlContent) async {
     final uri = Uri.parse('https://uk-v2.convertapi.com/convert/html/to/pdf');
     final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer Your api-key '
+      ..headers['Authorization'] = 'Bearer Your api-key'
       ..fields['StoreFile'] = 'true'
       ..files.add(http.MultipartFile.fromString('File', htmlContent, filename: 'resume.html'));
 

@@ -8,6 +8,9 @@ import 'package:rezumo/analysis_and_recommendation/utils/pdf_utils.dart';
 import 'package:rezumo/list_cv/List_edit_cv.dart';
 import 'dart:io';
 
+import 'package:rezumo/list_cv/helper_for_save.dart';
+import 'package:rezumo/list_cv/models/pdf_file.dart';
+
 class Check extends StatefulWidget {
   final String cvText;
   final String level;
@@ -75,6 +78,7 @@ class _CheckState extends State<Check> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Improve Resume'),
@@ -97,12 +101,18 @@ class _CheckState extends State<Check> {
               onPressed: () async {
                 final path = await PdfUtils.generateAndSavePdf(updatedHtml!);
                 if (path != null) {
+                  final resume = PdfFile(name: 'MyResume.pdf', path: path);
+
+                  // 🔥 Сохраняем в local storage
+                  final existing = await PdfStorage.loadFiles();
+                  final updatedList = [...existing, resume];
+                  await PdfStorage.saveFiles(updatedList);
+
+                  // Переход на экран редактирования
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => EditList(
-                        pdfFiles: [PdfFile(name: 'MyResume.pdf', path: path)],
-                      ),
+                      builder: (_) => EditList(pdfFiles: updatedList),
                     ),
                   );
                 }
@@ -110,6 +120,7 @@ class _CheckState extends State<Check> {
               icon: const Icon(Icons.edit),
               label: const Text("Edit my PDF"),
             )
+
           ],
         ),
       ),
