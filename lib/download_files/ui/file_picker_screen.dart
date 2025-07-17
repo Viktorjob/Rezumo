@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
-import 'package:rezumo/analysis_and%20_recommendation/check.dart';
+
+import 'package:rezumo/analysis_and_recommendation/check.dart';
 
 import '../bloc/file_picker_bloc.dart';
 
@@ -64,16 +65,16 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
     try {
       final pdfFile = File(filePath);
       if (!await pdfFile.exists()) {
-        throw Exception('Файл не существует: $filePath');
+        throw Exception('File does not exist.: $filePath');
       }
 
       final fileSize = await pdfFile.length();
-      if (fileSize == 0) throw Exception('PDF файл пустой');
-      print("Размер файла: $fileSize байт");
+      if (fileSize == 0) throw Exception('PDF file is empty.');
+      print("File size: $fileSize byte");
 
       final uri = Uri.parse('https://v2.convertapi.com/convert/pdf/to/html');
       final request = http.MultipartRequest('POST', uri)
-        ..headers['Authorization'] = 'Bearer LKHfjqi7eZw9cFUTsRzqYp7ytxPTjKM7'
+        ..headers['Authorization'] = 'Bearer Your api-key'
         ..fields['StoreFile'] = 'true'
         ..files.add(await http.MultipartFile.fromPath(
           'File',
@@ -81,38 +82,38 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
           filename: 'document.pdf',
         ));
 
-      print("Отправка запроса в ConvertAPI...");
+      print("Sending request to ConvertAPI...");
       final response = await request.send();
 
       if (response.statusCode == 200) {
         final jsonResponse = await response.stream.bytesToString();
-        print("Ответ API: $jsonResponse");
+        print("API response: $jsonResponse");
 
         final jsonMap = json.decode(jsonResponse);
         final files = jsonMap['Files'] as List;
-        if (files.isEmpty) throw Exception('Нет файлов в ответе API');
+        if (files.isEmpty) throw Exception('No files in the API response.');
 
         final fileUrl = files.first['Url'] as String;
-        print("URL HTML-файла: $fileUrl");
+        print("HTML file URL: $fileUrl");
 
         final htmlResponse = await http.get(Uri.parse(fileUrl));
         if (htmlResponse.statusCode != 200) {
-          throw Exception('Ошибка загрузки HTML: ${htmlResponse.statusCode}');
+          throw Exception('Error loading HTML: ${htmlResponse.statusCode}');
         }
 
         String htmlContent = htmlResponse.body;
-        print("До очистки: ${htmlContent.length} символов");
+        print("Error loading HTML: ${htmlContent.length} characters");
 
         final cleanedHtml = _cleanHtmlPreservingStructure(htmlContent);
-        print("После очистки: ${cleanedHtml.length} символов");
+        print("After clearing: ${cleanedHtml.length} characters");
 
         return cleanedHtml;
       } else {
         final errorBody = await response.stream.bytesToString();
-        throw Exception('Ошибка API (${response.statusCode}): $errorBody');
+        throw Exception('API error (${response.statusCode}): $errorBody');
       }
     } catch (e) {
-      print("Ошибка конвертации: $e");
+      print("Conversion error: $e");
       setState(() {
         _conversionError = e.toString();
       });
@@ -136,7 +137,7 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
             if (state is FilePickerInitial) {
               return ElevatedButton(
                 onPressed: () => context.read<FilePickerBloc>().add(PickFileEvent()),
-                child: const Text('Выбрать PDF'),
+                child: const Text('Select PDF'),
               );
             } else if (state is FilePickerLoading) {
               return const CircularProgressIndicator();
@@ -167,7 +168,7 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
                   if (_isConverting) ...[
                     const CircularProgressIndicator(),
                     const SizedBox(height: 10),
-                    const Text('Конвертация в процессе...'),
+                    const Text('Conversion in progress...'),
                     const SizedBox(height: 20),
                   ],
 
@@ -175,7 +176,7 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
                     const Icon(Icons.error, color: Colors.red, size: 40),
                     const SizedBox(height: 10),
                     Text(
-                      'Ошибка конвертации:',
+                      'Conversion error:',
                       style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold),
                     ),
                     Padding(
@@ -194,18 +195,18 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
                     children: [
                       ElevatedButton(
                         onPressed: () => context.read<FilePickerBloc>().add(PickFileEvent()),
-                        child: Text('Выбрать другой файл'),
+                        child: Text('Select another file'),
                       ),
                       SizedBox(width: 20),
 
-                      // Кнопка с выпадающим меню для выбора уровня
+
                       ElevatedButton(
                         onPressed: _isConverting
                             ? null
                             : () async {
                           if (_selectedLevel == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Пожалуйста, выберите уровень')),
+                              const SnackBar(content: Text('Please select a level')),
                             );
                             return;
                           }
@@ -221,15 +222,15 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
                               ),
                             );
                           } catch (e) {
-                            // Ошибка уже обработана
+
                           }
                         },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('Анализировать PDF'),
+                            const Text('Analyze PDF'),
                             const SizedBox(width: 12),
-                            // Отображаем выбранный уровень (если есть)
+
                             if (_selectedLevel != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -244,7 +245,7 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
                               ),
                             const SizedBox(width: 8),
                             PopupMenuButton<String>(
-                              tooltip: 'Выбрать уровень',
+                              tooltip: 'Select level',
                               onSelected: (value) {
                                 setState(() {
                                   _selectedLevel = value;
@@ -270,11 +271,11 @@ class _FilePickerScreenState extends State<FilePickerScreen> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Ошибка: ${state.message}', style: const TextStyle(color: Colors.red)),
+                  Text('Error: ${state.message}', style: const TextStyle(color: Colors.red)),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () => context.read<FilePickerBloc>().add(PickFileEvent()),
-                    child: const Text('Попробовать снова'),
+                    child: const Text('Try again'),
                   ),
                 ],
               );

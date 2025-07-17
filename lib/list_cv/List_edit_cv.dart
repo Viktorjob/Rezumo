@@ -23,20 +23,20 @@ class EditList extends StatelessWidget {
       final savedFile = await sourceFile.copy(savePath);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Файл сохранён: ${savedFile.path}')),
+        SnackBar(content: Text('File saved: ${savedFile.path}')),
       );
 
-      // 📂 Открываем файл сразу после сохранения
+
       final result = await OpenFile.open(savedFile.path);
 
       if (result.type != ResultType.done) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Не удалось открыть файл: ${result.message}')),
+          SnackBar(content: Text('Failed to open the file.: ${result.message}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка сохранения файла: $e')),
+        SnackBar(content: Text('Error saving file: $e')),
       );
     }
   }
