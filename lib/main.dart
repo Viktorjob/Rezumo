@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => FilePickerBloc()),
         BlocProvider(create: (_) => PdfConversionBloc(
-          PdfConverterService(apiKey: 'LKHfjqi7eZw9cFUTsRzqYp7ytxPTjKM7'),
+          PdfConverterService(apiKey: 'Your Api-key'),
         )),
       ],
       child: const MaterialApp(
