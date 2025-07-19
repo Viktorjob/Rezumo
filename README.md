@@ -1,4 +1,6 @@
 # Rezumo
+**👇 See Tasty and Easy in action (GIF demo below, might take a few seconds to load):**
+![rezumeGIF-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/0bd5935c-19f9-44a0-a83b-eb6a6b30544f)
 ## 📄 Smart CV Analyzer & Enhancer
 
 Rezumo is a cross-platform Flutter application designed to analyze and improve résumés. It uses AI (DeepSeek Chat) to review structure and content, providing personalized suggestions tailored to the user's level: Junior, Middle, or Senior. With PDF ↔ HTML conversion technology, Rezumo allows flexible editing and visual control of your CV.
