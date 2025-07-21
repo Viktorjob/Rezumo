@@ -24,7 +24,7 @@ Provide only the improved HTML.
       Uri.parse('https://api.deepseek.com/chat/completions'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sk-adeb63c7fce543729d6359e9e081d557',
+        'Authorization': 'Bearer Your Api-key',
       },
       body: jsonEncode({
         'model': 'deepseek-chat',

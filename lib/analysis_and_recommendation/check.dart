@@ -103,12 +103,12 @@ class _CheckState extends State<Check> {
                 if (path != null) {
                   final resume = PdfFile(name: 'MyResume.pdf', path: path);
 
-                  // 🔥 Сохраняем в local storage
+                  
                   final existing = await PdfStorage.loadFiles();
                   final updatedList = [...existing, resume];
                   await PdfStorage.saveFiles(updatedList);
 
-                  // Переход на экран редактирования
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(
