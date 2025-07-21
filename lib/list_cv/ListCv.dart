@@ -2,20 +2,20 @@
 import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 
-import 'package:rezumo/list_cv/helper_for_save.dart';
+import 'package:rezumo/list_cv/PdfStorage.dart';
 import 'package:rezumo/list_cv/models/pdf_file.dart';
 
 
 
 
-class EditList extends StatefulWidget {
-  const EditList({Key? key, required List<PdfFile> pdfFiles}) : super(key: key);
+class ListCv extends StatefulWidget {
+  const ListCv({Key? key, required List<PdfFile> pdfFiles}) : super(key: key);
 
   @override
-  State<EditList> createState() => _EditListState();
+  State<ListCv> createState() => _EditListState();
 }
 
-class _EditListState extends State<EditList> {
+class _EditListState extends State<ListCv> {
   List<PdfFile> _pdfFiles = [];
 
   @override

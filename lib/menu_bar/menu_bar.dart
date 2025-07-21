@@ -2,34 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:rezumo/download_files/file_picker_screen.dart';
 
 
-import 'package:rezumo/list_cv/List_edit_cv.dart';
+import 'package:rezumo/list_cv/ListCv.dart';
 
 
-class BottomNavigationBarExampleApp extends StatelessWidget {
-  const BottomNavigationBarExampleApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: BottomNavigationBarExample(),
-    );
-  }
-}
-
-
-class BottomNavigationBarExample extends StatefulWidget {
-  const BottomNavigationBarExample({super.key});
+class BottomNavigation extends StatefulWidget {
+  const BottomNavigation({super.key});
 
   @override
-  State<BottomNavigationBarExample> createState() => _BottomNavigationBarExampleState();
+  State<BottomNavigation> createState() => _BottomNavigationState();
 }
 
-class _BottomNavigationBarExampleState extends State<BottomNavigationBarExample> {
+class _BottomNavigationState extends State<BottomNavigation> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = <Widget>[
     const FilePickerScreen(),
-    const EditList(pdfFiles: [],),
+    const ListCv(pdfFiles: [],),
 
   ];
 

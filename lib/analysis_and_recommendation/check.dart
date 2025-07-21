@@ -5,10 +5,10 @@ import 'package:rezumo/analysis_and_recommendation/service/check_service.dart';
 import 'package:rezumo/analysis_and_recommendation/utils/pdf_utils.dart';
 
 
-import 'package:rezumo/list_cv/List_edit_cv.dart';
+import 'package:rezumo/list_cv/ListCv.dart';
 import 'dart:io';
 
-import 'package:rezumo/list_cv/helper_for_save.dart';
+import 'package:rezumo/list_cv/PdfStorage.dart';
 import 'package:rezumo/list_cv/models/pdf_file.dart';
 
 class Check extends StatefulWidget {
@@ -112,7 +112,7 @@ class _CheckState extends State<Check> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => EditList(pdfFiles: updatedList),
+                      builder: (_) => ListCv(pdfFiles: updatedList),
                     ),
                   );
                 }

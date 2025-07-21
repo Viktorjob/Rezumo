@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rezumo/download_files/pdf_conversion_bloc.dart';
+import 'package:rezumo/download_files/bloc/pdf_conversion_bloc.dart';
+
 import 'package:rezumo/download_files/pdf_converter_service.dart';
 
 import 'package:rezumo/menu_bar/menu_bar.dart';
@@ -36,7 +37,7 @@ class MyApp extends StatelessWidget {
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'PDF Picker Demo',
-        home: BottomNavigationBarExample(),
+        home: BottomNavigation(),
       ),
     );
   }

@@ -4,9 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:rezumo/analysis_and_recommendation/check.dart';
 import 'package:rezumo/download_files/bloc/file_picker_bloc.dart';
+import 'package:rezumo/download_files/bloc/pdf_conversion_bloc.dart';
 import 'package:rezumo/download_files/conversion_status_indicator.dart';
 import 'package:rezumo/download_files/level_selector.dart';
-import 'package:rezumo/download_files/pdf_conversion_bloc.dart';
+
 import 'package:rezumo/download_files/pdf_preview_card.dart';
 
 class FilePickerScreen extends StatefulWidget {
